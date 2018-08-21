@@ -35,6 +35,19 @@ def is_valid_ssh_rsa_public_key(openssh_pubkey):
 def generate_ssh_keys(private_key_filepath, public_key_filepath):
     import paramiko
 
+    try:
+        public_key_file = open(public_key_filepath, 'r')
+        public_key = public_key_file.read()
+
+        pub_ssh_dir, _ = os.path.split(public_key_filepath)
+        logger.warning("Public SSH key file '%s' found in dir '%s'."
+                       " Use public key file. New RSA key pair will not be generated.",
+                       public_key_filepath, pub_ssh_dir)
+
+        return public_key
+    except:
+        pass
+
     ssh_dir, _ = os.path.split(private_key_filepath)
     if not os.path.exists(ssh_dir):
         os.makedirs(ssh_dir)
