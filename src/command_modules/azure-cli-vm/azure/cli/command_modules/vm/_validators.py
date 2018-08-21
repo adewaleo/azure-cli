@@ -868,7 +868,7 @@ def validate_ssh_key(namespace):
                       os.path.join(os.path.expanduser('~'), '.ssh', 'id_rsa.pub'))
     content = string_or_file
     if os.path.exists(string_or_file):
-        logger.info('Reusing existing SSH public key from %s', string_or_file)
+        logger.info('Use existing SSH public key file: %s', string_or_file)
         with open(string_or_file, 'r') as f:
             content = f.read()
     elif not keys.is_valid_ssh_rsa_public_key(content):
