@@ -83,10 +83,9 @@ class AzCliHelp(CLIHelp):
             if help_file.command_source.preview:
                 logger.warning(help_file.command_source.get_preview_warn_msg())
 
-    # TODO: should this be _print
-    def print_detailed_help(self, cli_name, help_file):
+    def _print_detailed_help(self, cli_name, help_file):
         AzCliHelp._print_extensions_msg(help_file)
-        self._print_detailed_help(cli_name, help_file)
+        super(AzCliHelp, self)._print_detailed_help(cli_name, help_file)
 
     @staticmethod
     def update_parser_with_help_file(nouns, cmd_loader_map, parser, is_group):
