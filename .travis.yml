@@ -66,6 +66,14 @@ jobs:
     - stage: verify
       env:
       - PURPOSE='Automation'
+      - REDUCE_SDK='True'
+      - AZURE_CLI_TEST_TARGET_PROFILE='2017-03-09'
+      - AZ_USE_CACHE='True'
+      script: ./scripts/ci/test_automation.sh
+      python: 3.6
+    - stage: verify
+      env:
+      - PURPOSE='Automation'
       - AZURE_CLI_TEST_TARGET_PROFILE='2018-03-01'
       script: ./scripts/ci/test_automation.sh
       python: 2.7
@@ -91,6 +99,12 @@ jobs:
       python: 3.6
     - stage: verify
       env: PURPOSE='Load extension commands'
+      script: ./scripts/ci/test_extensions.sh
+      python: 3.6
+    - stage: verify
+      env:
+      - PURPOSE='Load extension commands'
+      - AZ_USE_CACHE='True'
       script: ./scripts/ci/test_extensions.sh
       python: 3.6
     - stage: publish
