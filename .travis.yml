@@ -107,6 +107,14 @@ jobs:
       - AZ_USE_CACHE='True'
       script: ./scripts/ci/test_extensions.sh
       python: 3.6
+    - stage: verify
+      env: PURPOSE='Load first half of extension commands'
+      script: ./scripts/ci/test_extensions1.sh
+      python: 3.6
+    - stage: verify
+      env: PURPOSE='Load second half of extension commands'
+      script: ./scripts/ci/test_extensions2.sh
+      python: 3.6
     - stage: publish
       script: ./scripts/ci/publish.sh
       python: 3.6
