@@ -505,8 +505,10 @@ def encrypt_vmss(cmd, resource_group_name, vmss_name,  # pylint: disable=too-man
 
     # remove any old ade extensions set by this command and add the new one.
     if vmss.virtual_machine_profile.extension_profile:
-        exts.extend(old_ext for old_ext in vmss.virtual_machine_profile.extension_profile.extensions
-                    if old_ext.type != ext.type or old_ext.name != ext.name)
+        existing_exts = vmss.virtual_machine_profile.extension_profile.extensions
+        if existing_exts:
+            exts.extend(old_ext for old_ext in existing_exts
+                        if old_ext.type != ext.type or old_ext.name != ext.name)
     vmss.virtual_machine_profile.extension_profile = VirtualMachineScaleSetExtensionProfile(extensions=exts)
 
     poller = compute_client.virtual_machine_scale_sets.create_or_update(resource_group_name, vmss_name, vmss)
