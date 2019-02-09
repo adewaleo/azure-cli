@@ -47,6 +47,14 @@ def create_report(module_name: str) -> Dict[str, Any]:
         "exceptions": {},
         "models": {}
     }
+
+    report["functions"] = {}
+
+    for possible_func_name in dir(module_to_generate):
+        possible_func = getattr(module_to_generate, possible_func_name)
+        report["functions"].update(create_report_helper(possible_func))
+
+    return report
     # Look for models first
     model_names = [model_name for model_name in dir(module_to_generate.models) if model_name[0].isupper()]
     for model_name in model_names:
@@ -76,6 +84,13 @@ def create_report(module_name: str) -> Dict[str, Any]:
         report.setdefault("operations", {})[op_name] = op_content
 
     return report
+
+def create_report_helper(cls):
+    if isinstance(cls, types.FunctionType) and not cls.__name__.startswith("_"):
+        func_content = create_report_from_func(cls)
+        return {cls.__name__:func_content}
+    return {}
+
 
 def create_model_report(model_cls):
     result = {
@@ -153,6 +168,7 @@ def main(input_parameter: str, version: Optional[str] = None, no_venv: bool = Fa
                     input_parameter
                 ]
                 try:
+                    print(args)
                     subprocess.check_call(args)
                 except subprocess.CalledProcessError:
                     # If it fail, just assume this version is too old to get an Autorest report
@@ -161,6 +177,7 @@ def main(input_parameter: str, version: Optional[str] = None, no_venv: bool = Fa
         return
 
     modules = find_autorest_generated_folder(module_name)
+    print("MODULES:\n"+"\n"+ str(modules))
     result = []
     for module_name in modules:
         _LOGGER.info(f"Working on {module_name}")
@@ -191,14 +208,14 @@ def find_autorest_generated_folder(module_prefix="azure"):
     _LOGGER.info(f"Looking for Autorest generated package in {module_prefix}")
 
     # Manually skip some namespaces for now
-    if module_prefix in ["azure.cli", "azure.storage", "azure.servicemanagement", "azure.servicebus"]:
+    if module_prefix in ["azure.storage", "azure.servicemanagement", "azure.servicebus"]:
         _LOGGER.info(f"Skip {module_prefix}")
         return []
 
     result = []
     try:
         _LOGGER.debug(f"Try {module_prefix}")
-        model_module = importlib.import_module(".models", module_prefix)
+        model_module = importlib.import_module(module_prefix)
         # If not exception, we MIGHT have found it, but cannot be a file.
         # Keep continue to try to break it, file module have no __path__
         model_module.__path__
