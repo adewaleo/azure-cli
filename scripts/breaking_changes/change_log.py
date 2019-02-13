@@ -38,6 +38,57 @@ class ChangeLog:
     def _unpack_diff_entry(diff_entry):
         return diff_entry[0], len(diff_entry) == 1
 
+    def rough_modified_method(self, diff_entry):
+        d = diff_entry[0]
+
+        # new method ...
+        if len(d) == 5:
+            message = _ADD_METHOD.format(d[4], d[2], d[0])
+            self.features.append(message)
+        else:
+            message = _METHOD_SIGNATURE_CHANGE.format(d[4], d[2], d[0])
+            # old_signature = self._old_report[d[0]][d[1]][d[2]][d[3]][d[4]][d[5]]
+            # new_signature = self._new_report[d[0]][d[1]][d[2]][d[3]][d[4]][d[5]]
+            # message = "{}\n\told: {}\n\tnew: {}".format(message, old_signature, new_signature)
+            self.breaking_changes.append(message)
+
+    def rough_modified_attributes(self, diff_entry):
+        d = diff_entry[0]
+        _, is_deletion = self._unpack_diff_entry(diff_entry)
+        # new method ...
+        if not is_deletion:
+            new = "s {}\n  ".format(", ".join(diff_entry[1].keys())) if isinstance(diff_entry[1], dict) else " " \
+                                                                                                                 "" + diff_entry[1]
+            message = _ADD_CLASS_ATTR.format(new, d[2], d[0])
+            self.features.append(message)
+        else:
+            message = _REMOVE_CLASS_ATTR.format(diff_entry[1], d[2], d[0])
+            # old_signature = self._old_report[d[0]][d[1]][d[2]][d[3]][d[4]][d[5]]
+            # new_signature = self._new_report[d[0]][d[1]][d[2]][d[3]][d[4]][d[5]]
+            # message = "{}\n\told: {}\n\tnew: {}".format(message, old_signature, new_signature)
+            self.breaking_changes.append(message)
+
+    def rough_new_class(self, diff_entry):
+        d = diff_entry[0]
+
+        _, is_deletion = self._unpack_diff_entry(diff_entry)
+
+        if not is_deletion:
+            message = _ADD_CLASS.format(d[2], d[0])
+            # message = "{}\n\tinfo: {}".format(message, self._new_report[d[0]][d[1]][d[2]])
+            self.features.append(message)
+        else:
+            message = _REMOVE_CLASS.format(d[2],d[0])
+            # message = "{}\n\tinfo: {}".format(message, self._old_report[d[0]][d[1]][d[2]])
+            self.breaking_changes.append(message)
+
+
+    def rough_new_function(self, diff_entry):
+        d = diff_entry[0]
+        message = _ADD_FUNCTION.format(d[2], d[0])
+        # message = "{}\n\tinfo: {}".format(message, self._new_report[d[0]][d[1]][d[2]])
+        self.features.append(message)
+
     def operation(self, diff_entry):
         path, is_deletion = self._unpack_diff_entry(diff_entry)
 
@@ -128,6 +179,14 @@ class ChangeLog:
             self.breaking_changes.append(_MODEL_PARAM_CHANGE_REQUIRED.format(parameter_name, model_name))
             return
 
+## New
+_METHOD_SIGNATURE_CHANGE = "Method {} of {} in module {} has a different signature."
+_ADD_METHOD = "Method {} of {} in module {} is new."
+_ADD_FUNCTION = "Function {} in module {} is new."
+_ADD_CLASS = "Class {} in module {} is new."
+_REMOVE_CLASS = "Class {} in module {} has been removed."
+_ADD_CLASS_ATTR = "Attribute{} of class {} in module {} is new."
+_REMOVE_CLASS_ATTR = "Attribute {} of class {} in module has been removed."
 
 ## Features
 _ADD_OPERATION_GROUP = "Added operation group {}"
@@ -149,11 +208,21 @@ def build_change_log(old_report, new_report):
     result = diff(old_report, new_report)
 
     for diff_line in result:
-        # Operations
-        if diff_line[0][0] == "operations":
-            change_log.operation(diff_line)
-        else:
-            change_log.models(diff_line)
+        if len(diff_line[0]) >= 4 and diff_line[0][3] == "methods":
+            change_log.rough_modified_method(diff_line)
+        elif len(diff_line[0]) == 3 and diff_line[0][1] == "functions":
+            change_log.rough_new_function(diff_line)
+        elif len(diff_line[0]) == 3 and diff_line[0][1] == "classes":
+            change_log.rough_new_class(diff_line)
+        elif len(diff_line[0]) >= 4 and diff_line[0][3] == "attributes":
+            change_log.rough_modified_attributes(diff_line)
+            pass
+
+        # # Operations
+        # if diff_line[0][0] == "operations":
+        #     change_log.operation(diff_line)
+        # else:
+        #     change_log.models(diff_line)
 
     return change_log
 

@@ -183,7 +183,7 @@ def create_report_from_class(cls):
         return cls_report
 
     cls_report.update({
-        'attributes': [],  # check that attribute names are the same...
+        'attributes': {},  # check that attribute names are the same...
         'methods': {},   # check if function names / params change
     })
 
@@ -208,7 +208,7 @@ def create_report_from_class(cls):
             if func_content: # skip builtin methods (i.e. methods of types like str ResourceId inherits from str for example)
                 cls_report["methods"][op_attr_name] = func_content
         else:
-            cls_report["attributes"].append(op_attr_name)
+            cls_report["attributes"].update({op_attr_name: op_attr_name})
 
     return cls_report
 
